@@ -1,0 +1,7 @@
+block.settings.hbktabs_order_site:
+  type: block_settings
+  label: 'tabs order site block'
+  mapping:
+    example:
+      type: string
+      label: Example

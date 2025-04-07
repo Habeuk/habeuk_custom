@@ -1,0 +1,5 @@
+name: 'Habeuk custom'
+type: module
+description: 'contient les actions propres à habeuk'
+package: Custom
+core_version_requirement: ^10 || ^11
