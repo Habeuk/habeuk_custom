@@ -11,6 +11,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Component\Utility\Random;
 use Drupal\Component\Utility\Html;
+use Drupal\layoutgenentitystyles\Services\LayoutgenentitystylesServices;
 
 /**
  * Provides a tabs order site block.
@@ -26,7 +27,7 @@ final class HbktabsOrderSiteBlock extends BlockBase implements ContainerFactoryP
   /**
    * Constructs the plugin instance.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, private readonly EntityTypeManagerInterface $entityTypeManager) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, private readonly EntityTypeManagerInterface $entityTypeManager, private readonly LayoutgenentitystylesServices $LayoutgenentitystylesServices) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
   
@@ -35,7 +36,7 @@ final class HbktabsOrderSiteBlock extends BlockBase implements ContainerFactoryP
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
-    return new self($configuration, $plugin_id, $plugin_definition, $container->get('entity_type.manager'));
+    return new self($configuration, $plugin_id, $plugin_definition, $container->get('entity_type.manager'), $container->get('layoutgenentitystyles.add.style.theme'));
   }
   
   /**
@@ -63,7 +64,8 @@ final class HbktabsOrderSiteBlock extends BlockBase implements ContainerFactoryP
         'bundle' => ''
       ],
       'number_tbas' => 3,
-      'id_modal' => null
+      'id_modal' => null,
+      'block_load_style_scss_js' => 'habeuk_custom/hbktabs_order_site'
     ] + parent::defaultConfiguration();
   }
   
@@ -90,11 +92,11 @@ final class HbktabsOrderSiteBlock extends BlockBase implements ContainerFactoryP
           '#type' => 'details',
           '#title' => 'Tab ' . $i,
           '#tree' => true,
-          '#open' => true,
+          '#open' => false,
           '#attributes' => [
             'id' => 'id_hbktabs_order_site' . $i
           ],
-          '#preffix' => '<div id="hbktabs_order_site_container">',
+          '#prefix' => '<div id="hbktabs_order_site_container' . $i . '">',
           '#suffix' => '</div>'
         ];
         $form['tab' . $i]['icone'] = [
@@ -120,9 +122,12 @@ final class HbktabsOrderSiteBlock extends BlockBase implements ContainerFactoryP
           '#options' => $this->getEntityDefinitions(),
           '#default_value' => $entity_type,
           '#required' => true,
+          '#attributes' => [
+            'data-reference' => 'tab' . $i
+          ],
           '#ajax' => [
             'callback' => self::class . '::ProccessAfterSelect',
-            'wrapper' => 'hbktabs_order_site_container',
+            'wrapper' => 'hbktabs_order_site_container' . $i,
             'effect' => 'fade'
           ]
         ];
@@ -131,20 +136,17 @@ final class HbktabsOrderSiteBlock extends BlockBase implements ContainerFactoryP
             '#type' => 'select',
             '#title' => 'bundle',
             '#options' => $this->getBundles($entity_type),
-            '#default_value' => !empty($this->configuration['tab' . $i]['bundle']) ? $this->configuration['tab' . $i]['bundle'] : '',
-            '#ajax' => [
-              'callback' => self::class . '::ProccessAfterSelect',
-              'wrapper' => 'hbktabs_order_site_container',
-              'effect' => 'fade'
-            ]
+            '#default_value' => !empty($this->configuration['tab' . $i]['bundle']) ? $this->configuration['tab' . $i]['bundle'] : ''
           ];
         }
       }
-    return $form;
+    return $form + parent::blockForm($form, $form_state);
   }
   
   public static function ProccessAfterSelect($form, FormStateInterface $form_state) {
-    return $form['settings'];
+    $reference = $form_state->getTriggeringElement();
+    $form['settings'][$reference['#attributes']['data-reference']]['#open'] = true;
+    return $form['settings'][$reference['#attributes']['data-reference']];
   }
   
   /**
@@ -152,13 +154,19 @@ final class HbktabsOrderSiteBlock extends BlockBase implements ContainerFactoryP
    * {@inheritdoc}
    */
   public function blockSubmit($form, FormStateInterface $form_state): void {
+    parent::blockSubmit($form, $form_state);
     $this->configuration['number_tbas'] = $form_state->getValue('number_tbas');
     $this->configuration['id_modal'] = $form_state->getValue('id_modal');
     $index = (int) $this->configuration['number_tbas'];
+    $values = $form_state->getValues();
     if ($index)
       for ($i = 0; $i < $index; $i++) {
-        $this->configuration['tab' . $i] = $form_state->getValue('tab' . $i);
+        if (isset($values['tab' . $i]))
+          $this->configuration['tab' . $i] = $values['tab' . $i];
       }
+    //
+    $library = $this->configuration['block_load_style_scss_js'];
+    $this->LayoutgenentitystylesServices->addStyleFromModule($library, 'commerceformatage_cart_bloc_complet', 'default');
   }
   
   /**
