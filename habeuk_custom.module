@@ -1,6 +1,20 @@
 <?php
 
 /**
+ *
  * @file
  * Primary module hooks for Habeuk custom module.
  */
+/**
+ * Implements hook_theme().
+ */
+function habeuk_custom_theme() {
+  $hooks = [];
+  $hooks['hbktabs_order_site'] = [
+    'variables' => [
+      'tabs' => [],
+      'id_tabs' => NULL
+    ]
+  ];
+  return $hooks;
+}
