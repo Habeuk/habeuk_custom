@@ -18,3 +18,28 @@ function habeuk_custom_theme() {
   ];
   return $hooks;
 }
+
+/**
+ * Implement hook_form_alter
+ * Permet d'alterer les champs.
+ */
+function habeuk_custom_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $context) {
+  if (!empty($form['#webform_id'])) {
+	  // Doit correspondre à une action créée dans l'interface admin
+	  $action_id = 'hbk_validation_des_webforms';
+	  // 2. Ajouter le champ CAPTCHA
+	  $captcha = [
+	    '#type' => 'captcha',
+	    '#captcha_type' => 'recaptcha_v3/' . $action_id
+	  ];
+	  // 3. Placement dans le formulaire
+	  if (!empty($form['elements'])) {
+	    $form['elements']['actions']['#weight'] = 10;
+	    $form['elements']['captcha'] = $captcha;
+	  }
+	  else {
+	    $form['actions']['#weight'] = 10;
+	    $form['captcha'] = $captcha;
+	  }
+  }
+}
