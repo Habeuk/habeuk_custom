@@ -20,6 +20,42 @@ function habeuk_custom_theme() {
 }
 
 /**
+ * Implements hook_page_attachments().
+ */
+function habeuk_custom_page_attachments(array &$attachments) {
+  $attachments['#attached']['html_head'][] = [
+    [
+      '#tag' => 'meta',
+      '#attributes' => [
+        'property' => 'og:logo',
+        'content' => 'https://habeuk.com/sites/default/files/styles/medium/public/2024-11/hlogo.png'
+      ]
+    ],
+    'og_logo'
+  ];
+}
+
+/**
+ * Implements hook_js_alter().
+ */
+// function habeuk_custom_js_alter(&$javascript) {
+// // Liste des fichiers à exclure du preprocessing
+// $excluded_files = [];
+
+// foreach ($javascript as &$js) {
+// foreach ($excluded_files as $excluded_file) {
+// if (strpos($js['data'], $excluded_file) !== FALSE) {
+// $js['preprocess'] = FALSE;
+// \Drupal::messenger()->addStatus(t('Fichier exclu du preprocessing: @file', [
+// '@file' => $js['data']
+// ]));
+// break;
+// }
+// }
+// }
+// }
+
+/**
  * Implement hook_form_alter
  * Permet d'alterer les champs.
  */
